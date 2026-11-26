@@ -1,0 +1,1733 @@
+{
+  "format_version": "1.0.0",
+  "incident_id": "INC-4815",
+  "seed": 4815,
+  "title": "Checkout failing \u2014 03:14",
+  "generated_at": "2026-11-26T09:10:00Z",
+  "incident_window": {
+    "start": "2026-11-26T03:14:00Z",
+    "end": "2026-11-26T03:16:00Z"
+  },
+  "log_lines": [
+    {
+      "id": "L001",
+      "timestamp": "2026-11-26T03:12:00Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 42ms"
+    },
+    {
+      "id": "L002",
+      "timestamp": "2026-11-26T03:12:02Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L003",
+      "timestamp": "2026-11-26T03:12:05Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 38ms"
+    },
+    {
+      "id": "L004",
+      "timestamp": "2026-11-26T03:12:06Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L005",
+      "timestamp": "2026-11-26T03:12:10Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 12ms"
+    },
+    {
+      "id": "L006",
+      "timestamp": "2026-11-26T03:12:10Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L007",
+      "timestamp": "2026-11-26T03:12:12Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L008",
+      "timestamp": "2026-11-26T03:12:16Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L009",
+      "timestamp": "2026-11-26T03:12:17Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L010",
+      "timestamp": "2026-11-26T03:12:20Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L011",
+      "timestamp": "2026-11-26T03:12:22Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L012",
+      "timestamp": "2026-11-26T03:12:24Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 42ms"
+    },
+    {
+      "id": "L013",
+      "timestamp": "2026-11-26T03:12:26Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L014",
+      "timestamp": "2026-11-26T03:12:29Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 38ms"
+    },
+    {
+      "id": "L015",
+      "timestamp": "2026-11-26T03:12:30Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L016",
+      "timestamp": "2026-11-26T03:12:34Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 12ms"
+    },
+    {
+      "id": "L017",
+      "timestamp": "2026-11-26T03:12:36Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L018",
+      "timestamp": "2026-11-26T03:12:36Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L019",
+      "timestamp": "2026-11-26T03:12:40Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L020",
+      "timestamp": "2026-11-26T03:12:41Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L021",
+      "timestamp": "2026-11-26T03:12:46Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L022",
+      "timestamp": "2026-11-26T03:12:46Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L023",
+      "timestamp": "2026-11-26T03:12:48Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 42ms"
+    },
+    {
+      "id": "L024",
+      "timestamp": "2026-11-26T03:12:50Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L025",
+      "timestamp": "2026-11-26T03:12:53Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 38ms"
+    },
+    {
+      "id": "L026",
+      "timestamp": "2026-11-26T03:12:56Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L027",
+      "timestamp": "2026-11-26T03:12:58Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 12ms"
+    },
+    {
+      "id": "L028",
+      "timestamp": "2026-11-26T03:13:00Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L029",
+      "timestamp": "2026-11-26T03:13:00Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L030",
+      "timestamp": "2026-11-26T03:13:04Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L031",
+      "timestamp": "2026-11-26T03:13:05Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L032",
+      "timestamp": "2026-11-26T03:13:10Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L033",
+      "timestamp": "2026-11-26T03:13:10Z",
+      "service": "auth",
+      "level": "ERROR",
+      "message": "auth ERROR token refresh failed (transient) \u2014 pre-dates deploy"
+    },
+    {
+      "id": "L034",
+      "timestamp": "2026-11-26T03:13:10Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L035",
+      "timestamp": "2026-11-26T03:13:12Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 42ms"
+    },
+    {
+      "id": "L036",
+      "timestamp": "2026-11-26T03:13:14Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L037",
+      "timestamp": "2026-11-26T03:13:17Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 38ms"
+    },
+    {
+      "id": "L038",
+      "timestamp": "2026-11-26T03:13:20Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L039",
+      "timestamp": "2026-11-26T03:13:22Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 12ms"
+    },
+    {
+      "id": "L040",
+      "timestamp": "2026-11-26T03:13:22Z",
+      "service": "auth",
+      "level": "ERROR",
+      "message": "auth ERROR token refresh failed (transient) \u2014 pre-dates deploy"
+    },
+    {
+      "id": "L041",
+      "timestamp": "2026-11-26T03:13:24Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L042",
+      "timestamp": "2026-11-26T03:13:24Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L043",
+      "timestamp": "2026-11-26T03:13:29Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L044",
+      "timestamp": "2026-11-26T03:13:30Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L045",
+      "timestamp": "2026-11-26T03:13:34Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L046",
+      "timestamp": "2026-11-26T03:13:34Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L047",
+      "timestamp": "2026-11-26T03:13:36Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 42ms"
+    },
+    {
+      "id": "L048",
+      "timestamp": "2026-11-26T03:13:40Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L049",
+      "timestamp": "2026-11-26T03:13:41Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 38ms"
+    },
+    {
+      "id": "L050",
+      "timestamp": "2026-11-26T03:13:44Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L051",
+      "timestamp": "2026-11-26T03:13:46Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 12ms"
+    },
+    {
+      "id": "L052",
+      "timestamp": "2026-11-26T03:13:48Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L053",
+      "timestamp": "2026-11-26T03:13:50Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L054",
+      "timestamp": "2026-11-26T03:13:54Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L055",
+      "timestamp": "2026-11-26T03:13:58Z",
+      "service": "pay-gw",
+      "level": "WARN",
+      "message": "pay-gw deploy v2.14.3 finished; config drift detected: connect_timeout=30s (expected 5s) \u2014 upstream closes idle connections at 5s"
+    },
+    {
+      "id": "L056",
+      "timestamp": "2026-11-26T03:13:59Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw deploy v2.14.3 finished clean; no errors from new code paths"
+    },
+    {
+      "id": "L057",
+      "timestamp": "2026-11-26T03:13:59Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw deploy v2.14.3 health checks passing (3/3)"
+    },
+    {
+      "id": "L058",
+      "timestamp": "2026-11-26T03:14:07Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s \u2014 first ERROR after deploy v2.14.3 (attempt 1/3)"
+    },
+    {
+      "id": "L059",
+      "timestamp": "2026-11-26T03:14:08Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L060",
+      "timestamp": "2026-11-26T03:14:09Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L061",
+      "timestamp": "2026-11-26T03:14:10Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L062",
+      "timestamp": "2026-11-26T03:14:11Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout upstream 504 from pay-gw (gateway timeout)"
+    },
+    {
+      "id": "L063",
+      "timestamp": "2026-11-26T03:14:12Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L064",
+      "timestamp": "2026-11-26T03:14:12Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L065",
+      "timestamp": "2026-11-26T03:14:13Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L066",
+      "timestamp": "2026-11-26T03:14:14Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L067",
+      "timestamp": "2026-11-26T03:14:15Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L068",
+      "timestamp": "2026-11-26T03:14:15Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout POST /pay 502 bad gateway"
+    },
+    {
+      "id": "L069",
+      "timestamp": "2026-11-26T03:14:16Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout upstream 504 from pay-gw (gateway timeout)"
+    },
+    {
+      "id": "L070",
+      "timestamp": "2026-11-26T03:14:17Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L071",
+      "timestamp": "2026-11-26T03:14:18Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L072",
+      "timestamp": "2026-11-26T03:14:18Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L073",
+      "timestamp": "2026-11-26T03:14:19Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L074",
+      "timestamp": "2026-11-26T03:14:19Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L075",
+      "timestamp": "2026-11-26T03:14:20Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L076",
+      "timestamp": "2026-11-26T03:14:20Z",
+      "service": "db",
+      "level": "WARN",
+      "message": "db pool 38/40 connections in use"
+    },
+    {
+      "id": "L077",
+      "timestamp": "2026-11-26T03:14:21Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout upstream 504 from pay-gw (gateway timeout)"
+    },
+    {
+      "id": "L078",
+      "timestamp": "2026-11-26T03:14:22Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L079",
+      "timestamp": "2026-11-26T03:14:23Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L080",
+      "timestamp": "2026-11-26T03:14:24Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L081",
+      "timestamp": "2026-11-26T03:14:25Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L082",
+      "timestamp": "2026-11-26T03:14:25Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout POST /pay 502 bad gateway"
+    },
+    {
+      "id": "L083",
+      "timestamp": "2026-11-26T03:14:27Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L084",
+      "timestamp": "2026-11-26T03:14:27Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout upstream 504 from pay-gw (gateway timeout)"
+    },
+    {
+      "id": "L085",
+      "timestamp": "2026-11-26T03:14:28Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L086",
+      "timestamp": "2026-11-26T03:14:29Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L087",
+      "timestamp": "2026-11-26T03:14:30Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L088",
+      "timestamp": "2026-11-26T03:14:30Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L089",
+      "timestamp": "2026-11-26T03:14:30Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 14ms"
+    },
+    {
+      "id": "L090",
+      "timestamp": "2026-11-26T03:14:30Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 41ms (intermittent success)"
+    },
+    {
+      "id": "L091",
+      "timestamp": "2026-11-26T03:14:32Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L092",
+      "timestamp": "2026-11-26T03:14:33Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L093",
+      "timestamp": "2026-11-26T03:14:33Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout upstream 504 from pay-gw (gateway timeout)"
+    },
+    {
+      "id": "L094",
+      "timestamp": "2026-11-26T03:14:33Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L095",
+      "timestamp": "2026-11-26T03:14:34Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L096",
+      "timestamp": "2026-11-26T03:14:35Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L097",
+      "timestamp": "2026-11-26T03:14:35Z",
+      "service": "db",
+      "level": "WARN",
+      "message": "db pool 38/40 connections in use"
+    },
+    {
+      "id": "L098",
+      "timestamp": "2026-11-26T03:14:37Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L099",
+      "timestamp": "2026-11-26T03:14:38Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L100",
+      "timestamp": "2026-11-26T03:14:38Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout POST /pay 502 bad gateway"
+    },
+    {
+      "id": "L101",
+      "timestamp": "2026-11-26T03:14:39Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L102",
+      "timestamp": "2026-11-26T03:14:40Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L103",
+      "timestamp": "2026-11-26T03:14:40Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout upstream 504 from pay-gw (gateway timeout)"
+    },
+    {
+      "id": "L104",
+      "timestamp": "2026-11-26T03:14:42Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L105",
+      "timestamp": "2026-11-26T03:14:43Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L106",
+      "timestamp": "2026-11-26T03:14:44Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L107",
+      "timestamp": "2026-11-26T03:14:44Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L108",
+      "timestamp": "2026-11-26T03:14:45Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L109",
+      "timestamp": "2026-11-26T03:14:45Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db p95 query 210ms (SLO 250ms) \u2014 within SLO"
+    },
+    {
+      "id": "L110",
+      "timestamp": "2026-11-26T03:14:47Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L111",
+      "timestamp": "2026-11-26T03:14:47Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L112",
+      "timestamp": "2026-11-26T03:14:48Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L113",
+      "timestamp": "2026-11-26T03:14:49Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L114",
+      "timestamp": "2026-11-26T03:14:50Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L115",
+      "timestamp": "2026-11-26T03:14:52Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L116",
+      "timestamp": "2026-11-26T03:14:52Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout POST /pay 502 bad gateway"
+    },
+    {
+      "id": "L117",
+      "timestamp": "2026-11-26T03:14:53Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L118",
+      "timestamp": "2026-11-26T03:14:54Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 3/3)"
+    },
+    {
+      "id": "L119",
+      "timestamp": "2026-11-26T03:14:55Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 1/3)"
+    },
+    {
+      "id": "L120",
+      "timestamp": "2026-11-26T03:14:55Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L121",
+      "timestamp": "2026-11-26T03:14:55Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 39ms (intermittent success)"
+    },
+    {
+      "id": "L122",
+      "timestamp": "2026-11-26T03:14:57Z",
+      "service": "pay-gw",
+      "level": "ERROR",
+      "message": "pay-gw connect timeout after 30s (attempt 2/3)"
+    },
+    {
+      "id": "L123",
+      "timestamp": "2026-11-26T03:14:58Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L124",
+      "timestamp": "2026-11-26T03:15:05Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout upstream 504 from pay-gw (gateway timeout)"
+    },
+    {
+      "id": "L125",
+      "timestamp": "2026-11-26T03:15:05Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 14ms"
+    },
+    {
+      "id": "L126",
+      "timestamp": "2026-11-26T03:15:05Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L127",
+      "timestamp": "2026-11-26T03:15:08Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L128",
+      "timestamp": "2026-11-26T03:15:10Z",
+      "service": "db",
+      "level": "WARN",
+      "message": "db pool 37/40 connections in use"
+    },
+    {
+      "id": "L129",
+      "timestamp": "2026-11-26T03:15:18Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L130",
+      "timestamp": "2026-11-26T03:15:20Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L131",
+      "timestamp": "2026-11-26T03:15:25Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db p95 query 198ms (SLO 250ms) \u2014 within SLO"
+    },
+    {
+      "id": "L132",
+      "timestamp": "2026-11-26T03:15:32Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L133",
+      "timestamp": "2026-11-26T03:15:40Z",
+      "service": "db",
+      "level": "WARN",
+      "message": "db connection wait 850ms (pool nearly full)"
+    },
+    {
+      "id": "L134",
+      "timestamp": "2026-11-26T03:15:48Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L135",
+      "timestamp": "2026-11-26T03:15:50Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 14ms"
+    },
+    {
+      "id": "L136",
+      "timestamp": "2026-11-26T03:15:55Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L137",
+      "timestamp": "2026-11-26T03:16:02Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L138",
+      "timestamp": "2026-11-26T03:16:05Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L139",
+      "timestamp": "2026-11-26T03:16:12Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L140",
+      "timestamp": "2026-11-26T03:16:14Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L141",
+      "timestamp": "2026-11-26T03:16:20Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L142",
+      "timestamp": "2026-11-26T03:16:20Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L143",
+      "timestamp": "2026-11-26T03:16:29Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L144",
+      "timestamp": "2026-11-26T03:16:35Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L145",
+      "timestamp": "2026-11-26T03:16:35Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L146",
+      "timestamp": "2026-11-26T03:16:44Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L147",
+      "timestamp": "2026-11-26T03:16:50Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L148",
+      "timestamp": "2026-11-26T03:16:50Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L149",
+      "timestamp": "2026-11-26T03:16:59Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L150",
+      "timestamp": "2026-11-26T03:17:05Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L151",
+      "timestamp": "2026-11-26T03:17:14Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L152",
+      "timestamp": "2026-11-26T03:17:20Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L153",
+      "timestamp": "2026-11-26T03:17:26Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L154",
+      "timestamp": "2026-11-26T03:17:35Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L155",
+      "timestamp": "2026-11-26T03:17:41Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L156",
+      "timestamp": "2026-11-26T03:17:50Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L157",
+      "timestamp": "2026-11-26T03:17:56Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L158",
+      "timestamp": "2026-11-26T03:18:05Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L159",
+      "timestamp": "2026-11-26T03:18:11Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L160",
+      "timestamp": "2026-11-26T03:18:20Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L161",
+      "timestamp": "2026-11-26T03:18:26Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L162",
+      "timestamp": "2026-11-26T03:18:35Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L163",
+      "timestamp": "2026-11-26T03:18:41Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L164",
+      "timestamp": "2026-11-26T03:18:47Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L165",
+      "timestamp": "2026-11-26T03:18:56Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L166",
+      "timestamp": "2026-11-26T03:19:02Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L167",
+      "timestamp": "2026-11-26T03:19:11Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L168",
+      "timestamp": "2026-11-26T03:19:17Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L169",
+      "timestamp": "2026-11-26T03:19:26Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L170",
+      "timestamp": "2026-11-26T03:19:30Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw failover to pay-gw-2 initiated (fix applied)"
+    },
+    {
+      "id": "L171",
+      "timestamp": "2026-11-26T03:19:32Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L172",
+      "timestamp": "2026-11-26T03:19:35Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L173",
+      "timestamp": "2026-11-26T03:19:41Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L174",
+      "timestamp": "2026-11-26T03:19:45Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "checkout error rate falling: 61% -> 34%"
+    },
+    {
+      "id": "L175",
+      "timestamp": "2026-11-26T03:19:47Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L176",
+      "timestamp": "2026-11-26T03:19:55Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L177",
+      "timestamp": "2026-11-26T03:19:56Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L178",
+      "timestamp": "2026-11-26T03:20:02Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L179",
+      "timestamp": "2026-11-26T03:20:05Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L180",
+      "timestamp": "2026-11-26T03:20:08Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L181",
+      "timestamp": "2026-11-26T03:20:10Z",
+      "service": "checkout",
+      "level": "ERROR",
+      "message": "checkout POST /pay 502 (stale retry, pre-failover request)"
+    },
+    {
+      "id": "L182",
+      "timestamp": "2026-11-26T03:20:15Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "checkout error rate 61% -> 18%"
+    },
+    {
+      "id": "L183",
+      "timestamp": "2026-11-26T03:20:17Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L184",
+      "timestamp": "2026-11-26T03:20:23Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L185",
+      "timestamp": "2026-11-26T03:20:25Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L186",
+      "timestamp": "2026-11-26T03:20:32Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L187",
+      "timestamp": "2026-11-26T03:20:35Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L188",
+      "timestamp": "2026-11-26T03:20:38Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L189",
+      "timestamp": "2026-11-26T03:20:45Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw-2 ok 200 39ms (failover healthy)"
+    },
+    {
+      "id": "L190",
+      "timestamp": "2026-11-26T03:20:47Z",
+      "service": "db",
+      "level": "INFO",
+      "message": "db query ok 11ms"
+    },
+    {
+      "id": "L191",
+      "timestamp": "2026-11-26T03:20:50Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L192",
+      "timestamp": "2026-11-26T03:20:53Z",
+      "service": "auth",
+      "level": "INFO",
+      "message": "auth token verify ok"
+    },
+    {
+      "id": "L193",
+      "timestamp": "2026-11-26T03:21:00Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "checkout error rate 61% -> 9% in 90s \u2014 recovering"
+    },
+    {
+      "id": "L194",
+      "timestamp": "2026-11-26T03:21:02Z",
+      "service": "inventory",
+      "level": "INFO",
+      "message": "inventory stock check ok"
+    },
+    {
+      "id": "L195",
+      "timestamp": "2026-11-26T03:21:08Z",
+      "service": "shipping",
+      "level": "INFO",
+      "message": "shipping rates ok 200"
+    },
+    {
+      "id": "L196",
+      "timestamp": "2026-11-26T03:21:10Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L197",
+      "timestamp": "2026-11-26T03:21:17Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L198",
+      "timestamp": "2026-11-26T03:21:20Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "GET /checkout 200 44ms"
+    },
+    {
+      "id": "L199",
+      "timestamp": "2026-11-26T03:21:23Z",
+      "service": "pay-gw",
+      "level": "INFO",
+      "message": "pay-gw ok 200 36ms"
+    },
+    {
+      "id": "L200",
+      "timestamp": "2026-11-26T03:21:30Z",
+      "service": "checkout",
+      "level": "INFO",
+      "message": "checkout recovering \u2014 03:21"
+    }
+  ],
+  "causes": [
+    {
+      "id": "C1",
+      "title": "Payment gateway timeout",
+      "linked_service": "pay-gw",
+      "support_count": 48,
+      "contradict_count": 2,
+      "pinned_evidence": [
+        "L058",
+        "L059",
+        "L060",
+        "L061",
+        "L063",
+        "L065",
+        "L066",
+        "L067",
+        "L070",
+        "L071",
+        "L073",
+        "L075",
+        "L078",
+        "L079",
+        "L080",
+        "L081",
+        "L083",
+        "L085",
+        "L086",
+        "L087",
+        "L091",
+        "L092",
+        "L095",
+        "L096",
+        "L098",
+        "L099",
+        "L101",
+        "L102",
+        "L104",
+        "L105",
+        "L106",
+        "L108",
+        "L110",
+        "L112",
+        "L113",
+        "L114",
+        "L115",
+        "L117",
+        "L118",
+        "L119",
+        "L122",
+        "L062",
+        "L069",
+        "L077",
+        "L084",
+        "L093",
+        "L103",
+        "L124",
+        "L055"
+      ],
+      "contradicting_evidence": [
+        "L090",
+        "L121"
+      ]
+    },
+    {
+      "id": "C2",
+      "title": "Database connection pool exhausted",
+      "linked_service": "db",
+      "support_count": 4,
+      "contradict_count": 5,
+      "pinned_evidence": [
+        "L076",
+        "L097",
+        "L128",
+        "L133"
+      ],
+      "contradicting_evidence": [
+        "L109",
+        "L131",
+        "L089",
+        "L125",
+        "L135"
+      ]
+    },
+    {
+      "id": "C3",
+      "title": "Bad deploy v2.14.3",
+      "linked_service": "pay-gw",
+      "support_count": 2,
+      "contradict_count": 6,
+      "pinned_evidence": [
+        "L055",
+        "L058"
+      ],
+      "contradicting_evidence": [
+        "L056",
+        "L057",
+        "L033",
+        "L040",
+        "L090",
+        "L121"
+      ]
+    }
+  ],
+  "service_states": {
+    "pay-gw": [
+      {
+        "timestamp": "2026-11-26T03:14:00Z",
+        "state": "down"
+      },
+      {
+        "timestamp": "2026-11-26T03:15:00Z",
+        "state": "down"
+      },
+      {
+        "timestamp": "2026-11-26T03:16:00Z",
+        "state": "down"
+      },
+      {
+        "timestamp": "2026-11-26T03:17:00Z",
+        "state": "degraded"
+      },
+      {
+        "timestamp": "2026-11-26T03:18:00Z",
+        "state": "degraded"
+      },
+      {
+        "timestamp": "2026-11-26T03:19:00Z",
+        "state": "degraded"
+      },
+      {
+        "timestamp": "2026-11-26T03:20:00Z",
+        "state": "recovering"
+      },
+      {
+        "timestamp": "2026-11-26T03:21:00Z",
+        "state": "ok"
+      }
+    ],
+    "checkout": [
+      {
+        "timestamp": "2026-11-26T03:14:00Z",
+        "state": "degraded"
+      },
+      {
+        "timestamp": "2026-11-26T03:15:00Z",
+        "state": "down"
+      },
+      {
+        "timestamp": "2026-11-26T03:16:00Z",
+        "state": "down"
+      },
+      {
+        "timestamp": "2026-11-26T03:17:00Z",
+        "state": "degraded"
+      },
+      {
+        "timestamp": "2026-11-26T03:18:00Z",
+        "state": "degraded"
+      },
+      {
+        "timestamp": "2026-11-26T03:19:00Z",
+        "state": "degraded"
+      },
+      {
+        "timestamp": "2026-11-26T03:20:00Z",
+        "state": "recovering"
+      },
+      {
+        "timestamp": "2026-11-26T03:21:00Z",
+        "state": "ok"
+      }
+    ],
+    "inventory": [
+      {
+        "timestamp": "2026-11-26T03:14:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:15:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:16:00Z",
+        "state": "degraded"
+      },
+      {
+        "timestamp": "2026-11-26T03:17:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:18:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:19:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:20:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:21:00Z",
+        "state": "ok"
+      }
+    ],
+    "shipping": [
+      {
+        "timestamp": "2026-11-26T03:14:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:15:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:16:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:17:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:18:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:19:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:20:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:21:00Z",
+        "state": "ok"
+      }
+    ],
+    "db": [
+      {
+        "timestamp": "2026-11-26T03:14:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:15:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:16:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:17:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:18:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:19:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:20:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:21:00Z",
+        "state": "ok"
+      }
+    ],
+    "auth": [
+      {
+        "timestamp": "2026-11-26T03:14:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:15:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:16:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:17:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:18:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:19:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:20:00Z",
+        "state": "ok"
+      },
+      {
+        "timestamp": "2026-11-26T03:21:00Z",
+        "state": "ok"
+      }
+    ]
+  },
+  "fix": {
+    "title": "Roll back gateway config to v2.14.2 and fail over to standby gateway (pay-gw-2)",
+    "steps": [
+      "Roll back pay-gw config to v2.14.2 (connect timeout back to 5s, matching the upstream idle-close).",
+      "Route checkout payment traffic from pay-gw to standby gateway pay-gw-2.",
+      "Drain in-flight pay-gw connections and confirm pay-gw-2 health checks pass.",
+      "Watch checkout error rate for 90s before declaring recovery."
+    ],
+    "expected_effect": "error rate 61% \u2192 9% in 90s"
+  },
+  "ground_truth_cause_id": "C1"
+}
