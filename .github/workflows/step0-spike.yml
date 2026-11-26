@@ -1,0 +1,199 @@
+# Step 0 spike — PICO toolchain + emulator on a GitHub Actions macOS runner
+#
+# Purpose: the PICO toolchain (Primer engine) refuses Linux entirely, and the
+# build VM has no KVM, so Step 0 of the War-Room spike cannot run locally.
+# This workflow attempts Step 0 on a standard GitHub-hosted macOS runner
+# (macos-15, Apple Silicon M1, 3 CPU / 7 GB RAM).
+#
+# Cost: $0. Standard GitHub-hosted runners are free and unlimited on PUBLIC
+# repositories (docs.github.com, "Choosing the runner for a job", verified
+# 26 Nov 2026). This repo must stay public; do not switch it to private and
+# do not use larger-runner labels (those are billed even on public repos).
+#
+# Trigger: push a change to this file, or workflow_dispatch in the Actions tab.
+# Each run is a fresh VM; the job is staged so the log shows exactly how far
+# Step 0 got: (A) CLI install + setup + doctor, (B) emulator install/create/
+# start + boot check, (C) WelcomeSpace sample build + install + launch.
+# Stage C only proves something if B passed; stage B only proves something
+# if A passed. The final diagnostics step always runs.
+#
+# Authorisations (Olly, 26 Nov 2026, "You do everything without my input"):
+# - Proceed with the official PICO sample content (Apache 2.0) despite the
+#   runtime execution-risk hold on the local clone.
+# - Choose and attempt a host route autonomously, zero spend, no new accounts,
+#   no sign-ins as Olly. If any step demands a Doubao sign-in, it must FAIL
+#   visibly and be reported as the one remaining human step — never sign in.
+#
+# Verified before this workflow was written (26 Nov 2026):
+# - pico-cli 0.7.0, commands `emulator install/create/start`, `project create`
+#   confirmed from `pico-cli --help` on the installed CLI.
+# - WelcomeSpace sample: applicationId com.pico.spatial.sample.welcomespace,
+#   launcher .platform.LaunchActivity, compileSdk 35, AGP 8.8.0, Kotlin 2.0.0,
+#   Gradle 8.10.2, Spatial BOM 6.2.8, NDK abiFilters arm64-v8a only (so the
+#   emulator must run arm64 images — Apple Silicon runner is the right target).
+#   All dependencies are public (google(), mavenCentral(), ByteDance
+#   Volcengine artifact repo) — no credentials needed.
+# - The PICO CLI ships macOS arm64/x64 toolchain pieces; the emulator bundle
+#   architecture is resolved at install time on the runner — the run itself
+#   is the test for that open question.
+name: step0-spike
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/step0-spike.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  step0:
+    runs-on: macos-15
+    timeout-minutes: 360
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Host facts
+        run: |
+          echo "arch: $(uname -m)"
+          sw_vers
+          echo "cpus: $(sysctl -n hw.ncpu) mem_bytes: $(sysctl -n hw.memsize)"
+          node --version
+          npm --version
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # ---- Stage A: CLI install + setup + doctor ----
+      - name: Install PICO CLI (latest stable)
+        run: |
+          npm view @picoxr/pico-cli dist-tags --json
+          npm install -g @picoxr/pico-cli
+          pico-cli --version
+
+      - name: CLI discovery (emulator commands)
+        run: |
+          pico-cli emulator --help
+          pico-cli emulator install --help
+          pico-cli emulator create --help
+          pico-cli emulator start --help
+
+      - name: pico-cli setup (non-interactive, row region)
+        timeout-minutes: 10
+        run: pico-cli setup --region row --yes
+
+      - name: pico-cli doctor
+        continue-on-error: true
+        run: pico-cli doctor || true
+
+      - name: Emulator doctor/setup
+        continue-on-error: true
+        run: |
+          pico-cli emulator doctor || true
+          pico-cli emulator setup || true
+
+      # ---- Stage B: emulator install / create / start / boot ----
+      - name: Install PICO emulator bundle
+        timeout-minutes: 60
+        run: pico-cli emulator install -y
+
+      - name: Create AVD
+        timeout-minutes: 30
+        run: pico-cli emulator create --avd SpaceProgram_Smoke -y
+
+      - name: Locate Android SDK and adb
+        id: sdk
+        run: |
+          echo "PICO_HOME=${PICO_HOME:-<unset>}"
+          echo "ANDROID_HOME=${ANDROID_HOME:-<unset>}"
+          find "$HOME/pico" "$HOME/Library" "$HOME/.pico" -maxdepth 4 -name adb -type f 2>/dev/null | head -5 || true
+          ADB="$(find "$HOME" -maxdepth 6 -path '*platform-tools/adb' -type f 2>/dev/null | head -1 || true)"
+          if [ -n "$ADB" ]; then
+            dirname "$ADB" >> "$GITHUB_PATH"
+            echo "adb=$ADB" >> "$GITHUB_OUTPUT"
+            echo "found adb: $ADB"
+          else
+            echo "adb NOT found under HOME — emulator start may still provide its own"
+          fi
+
+      - name: Start emulator and wait for boot
+        timeout-minutes: 60
+        run: |
+          pico-cli emulator start --avd SpaceProgram_Smoke > /tmp/emu-start.log 2>&1 &
+          echo "emulator start launched in background"
+          for i in $(seq 1 150); do
+            if adb devices 2>/dev/null | grep -q emulator; then
+              if [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then
+                echo "BOOT COMPLETE after ~$((i * 10))s"
+                adb shell getprop ro.build.version.release
+                adb shell pm list packages 2>/dev/null | grep -i pico | head -10 || true
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "EMULATOR DID NOT BOOT within 25 minutes"
+          cat /tmp/emu-start.log || true
+          pico-cli emulator status || true
+          exit 1
+
+      # ---- Stage C: WelcomeSpace sample build + install + launch ----
+      - name: Clone WelcomeSpace sample (Apache 2.0)
+        run: git clone --depth 1 https://github.com/Pico-Developer/PICO-Spatial-SDK-Sample-WelcomeSpace.git sample-welcomespace
+
+      - name: Build WelcomeSpace APK
+        timeout-minutes: 120
+        run: |
+          cd sample-welcomespace
+          ./gradlew assembleDebug --stacktrace
+          ls -la app/build/outputs/apk/debug/
+
+      - name: Install and launch on emulator
+        timeout-minutes: 30
+        run: |
+          adb install -r sample-welcomespace/app/build/outputs/apk/debug/app-debug.apk
+          adb shell am start -n com.pico.spatial.sample.welcomespace/.platform.LaunchActivity
+          sleep 60
+          adb shell pidof com.pico.spatial.sample.welcomespace
+          adb exec-out screencap -p > /tmp/welcomespace.png
+          ls -la /tmp/welcomespace.png
+
+      # ---- Diagnostics: always ----
+      - name: Diagnostics
+        if: always()
+        run: |
+          pico-cli emulator status || true
+          pico-cli emulator log || true
+          adb devices || true
+          adb logcat -d -t 300 || true
+          tail -60 /tmp/emu-start.log || true
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step0-evidence
+          path: /tmp/welcomespace.png
+          if-no-files-found: warn
+
+  w1-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Run W1 scorer tests
+        run: |
+          python3 --version
+          cd w1
+          python3 -m unittest test_scorer -v
