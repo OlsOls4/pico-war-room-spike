@@ -88,9 +88,14 @@ jobs:
           pico-cli emulator create --help
           pico-cli emulator start --help
 
-      - name: pico-cli setup (non-interactive, row region)
+      - name: pico-cli setup (non-interactive, row region, Cursor only)
         timeout-minutes: 10
-        run: pico-cli setup --region row --yes
+        # 26 Nov 2026, runs #1/#2: plain `setup --region row --yes` exits 3 on
+        # the runner because it tries to configure claude-code, codex,
+        # copilot and traecli, whose CLIs are not installed there (and must
+        # not be — they would demand sign-ins). Only Cursor succeeds.
+        # --agent-tool cursor scopes setup to the one host present.
+        run: pico-cli setup --region row --yes --agent-tool cursor
 
       - name: pico-cli doctor
         continue-on-error: true
