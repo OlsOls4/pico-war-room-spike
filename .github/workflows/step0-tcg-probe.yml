@@ -85,15 +85,77 @@ jobs:
         timeout-minutes: 30
         run: pico-cli emulator create --avd SpaceProgram_Smoke -y
 
+      # Run #1 (26 Nov, 17:40-17:44 GMT) failed HERE in 1s: the old
+      # `find $HOME/.pico -maxdepth 3 -name emulator -type f` found nothing,
+      # even though the bundle install and AVD creation had just succeeded.
+      # Likely causes: the binary sits deeper than 3 levels, is a symlink
+      # (-type f misses symlinks), or is named emulator-*. This step now
+      # searches with no depth cap, accepts symlinks, prefers executable
+      # files, and prints the .pico tree first so the next log shows where
+      # things actually landed. It still fails fast, but only after printing
+      # all of that diagnostic output.
       - name: Locate emulator binary and adb (fail fast if missing)
         id: tools
         run: |
-          EMU="$(find "$HOME/.pico" -maxdepth 3 -name emulator -type f 2>/dev/null | head -1)"
-          if [ -z "$EMU" ]; then echo "EMULATOR BINARY NOT FOUND under \$HOME/.pico"; exit 1; fi
+          echo "HOME=$HOME"
+          echo "PICO_HOME=${PICO_HOME:-<unset>}"
+          echo "ANDROID_HOME=${ANDROID_HOME:-<unset>} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-<unset>}"
+          echo "--- .pico tree (first 80 lines) ---"
+          if [ -d "$HOME/.pico" ]; then find "$HOME/.pico" 2>/dev/null | head -80; else echo "$HOME/.pico does not exist"; fi
+          if [ -n "${PICO_HOME:-}" ] && [ "$PICO_HOME" != "$HOME/.pico" ] && [ -d "$PICO_HOME" ]; then
+            echo "--- PICO_HOME tree (first 80 lines) ---"
+            find "$PICO_HOME" 2>/dev/null | head -80
+          fi
+          echo "--- what the CLI sees ---"
+          pico-cli emulator list || true
+          pico-cli emulator status || true
+          echo "--- emulator candidates under .pico (first 20) ---"
+          find "$HOME/.pico" \( -name 'emulator*' \) 2>/dev/null | head -20 || true
+          pick_emu() {
+            find "$1" -name emulator \( -type f -o -type l \) 2>/dev/null | while read -r c; do
+              if [ -x "$c" ]; then echo "$c"; break; fi
+            done | head -1
+          }
+          pick_emu_glob() {
+            find "$1" -name 'emulator-*' \( -type f -o -type l \) 2>/dev/null | while read -r c; do
+              case "$c" in *.json|*.log) continue;; esac
+              if [ -x "$c" ]; then echo "$c"; break; fi
+            done | head -1
+          }
+          EMU=""
+          for ROOT in "$HOME/.pico" "${PICO_HOME:-}" "$HOME/.picoxr"; do
+            [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+            EMU="$(pick_emu "$ROOT" || true)"
+            [ -n "$EMU" ] && break
+          done
+          if [ -z "$EMU" ]; then
+            for ROOT in "$HOME/.pico" "${PICO_HOME:-}" "$HOME/.picoxr"; do
+              [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+              EMU="$(pick_emu_glob "$ROOT" || true)"
+              [ -n "$EMU" ] && break
+            done
+          fi
+          if [ -z "$EMU" ]; then
+            echo "EMULATOR BINARY NOT FOUND: searched for executable files named emulator / emulator-* (regular files and symlinks, any depth) under \$HOME/.pico, \$PICO_HOME, \$HOME/.picoxr"
+            exit 1
+          fi
           echo "emu=$EMU" >> "$GITHUB_OUTPUT"
           echo "emulator binary: $EMU"
-          ADB="$(find "$HOME" -maxdepth 6 -path '*platform-tools/adb' -type f 2>/dev/null | head -1 || true)"
-          if [ -z "$ADB" ]; then echo "adb NOT FOUND under \$HOME"; exit 1; fi
+          ls -la "$EMU" || true
+          echo "--- searching for adb ---"
+          ADB=""
+          if command -v adb >/dev/null 2>&1; then ADB="$(command -v adb)"; echo "adb on PATH: $ADB"; fi
+          if [ -z "$ADB" ]; then
+            for ROOT in "$HOME/.pico" "${PICO_HOME:-}" "$HOME/Library/Android/sdk" "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" /usr/local/share/android-sdk; do
+              [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+              ADB="$(find "$ROOT" -path '*platform-tools/adb' \( -type f -o -type l \) 2>/dev/null | head -1 || true)"
+              [ -n "$ADB" ] && break
+            done
+          fi
+          if [ -z "$ADB" ]; then
+            echo "adb NOT FOUND: checked PATH, \$HOME/.pico, \$PICO_HOME, \$HOME/Library/Android/sdk, \$ANDROID_HOME, \$ANDROID_SDK_ROOT, /usr/local/share/android-sdk"
+            exit 1
+          fi
           dirname "$ADB" >> "$GITHUB_PATH"
           echo "adb: $ADB"
           "$EMU" -accel-check || true
