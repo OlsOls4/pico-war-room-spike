@@ -88,21 +88,36 @@ jobs:
       # Run #1 (26 Nov, 17:40-17:44 GMT) failed HERE in 1s: the old
       # `find $HOME/.pico -maxdepth 3 -name emulator -type f` found nothing,
       # even though the bundle install and AVD creation had just succeeded.
-      # Likely causes: the binary sits deeper than 3 levels, is a symlink
-      # (-type f misses symlinks), or is named emulator-*. This step now
-      # searches with no depth cap, accepts symlinks, prefers executable
-      # files, and prints the .pico tree first so the next log shows where
-      # things actually landed. It still fails fast, but only after printing
-      # all of that diagnostic output.
+      # Run #2 (26 Nov, ~18:08 GMT) failed the same way in 2 s, and its
+      # step logs (browser read, 18:23-18:29 GMT) prove the cause — NOT
+      # depth/symlink/name (that guess was wrong): the bundle installs to
+      # $HOME/Library/PICO/sdk/6.2/emulator, never under $HOME/.pico, and
+      # PICO_HOME is configured to $HOME/Library/PICO/sdk but NOT exported
+      # into the shell, so the old search roots never included it. This step
+      # now exports PICO_HOME (persisted via $GITHUB_ENV so later steps see
+      # it), searches $HOME/Library/PICO/sdk as a root, and prints its tree
+      # alongside the .pico tree. It still fails fast, but only after
+      # printing all of that diagnostic output.
       - name: Locate emulator binary and adb (fail fast if missing)
         id: tools
         run: |
           echo "HOME=$HOME"
           echo "PICO_HOME=${PICO_HOME:-<unset>}"
           echo "ANDROID_HOME=${ANDROID_HOME:-<unset>} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-<unset>}"
+          # Run #2 logs proved the bundle installs to $HOME/Library/PICO/sdk
+          # (PICO_HOME configured there) but PICO_HOME is NOT exported into
+          # the shell. Export it here and persist it via $GITHUB_ENV so the
+          # later steps (TCG start, diagnostics) see it too.
+          if [ -z "${PICO_HOME:-}" ]; then
+            export PICO_HOME="$HOME/Library/PICO/sdk"
+            echo "PICO_HOME=$PICO_HOME" >> "$GITHUB_ENV"
+            echo "PICO_HOME was unset; exported and persisted: $PICO_HOME"
+          fi
           echo "--- .pico tree (first 80 lines) ---"
           if [ -d "$HOME/.pico" ]; then find "$HOME/.pico" 2>/dev/null | head -80; else echo "$HOME/.pico does not exist"; fi
-          if [ -n "${PICO_HOME:-}" ] && [ "$PICO_HOME" != "$HOME/.pico" ] && [ -d "$PICO_HOME" ]; then
+          echo "--- Library/PICO/sdk tree (first 80 lines) ---"
+          if [ -d "$HOME/Library/PICO/sdk" ]; then find "$HOME/Library/PICO/sdk" 2>/dev/null | head -80; else echo "$HOME/Library/PICO/sdk does not exist"; fi
+          if [ -n "${PICO_HOME:-}" ] && [ "$PICO_HOME" != "$HOME/.pico" ] && [ "$PICO_HOME" != "$HOME/Library/PICO/sdk" ] && [ -d "$PICO_HOME" ]; then
             echo "--- PICO_HOME tree (first 80 lines) ---"
             find "$PICO_HOME" 2>/dev/null | head -80
           fi
@@ -111,6 +126,8 @@ jobs:
           pico-cli emulator status || true
           echo "--- emulator candidates under .pico (first 20) ---"
           find "$HOME/.pico" \( -name 'emulator*' \) 2>/dev/null | head -20 || true
+          echo "--- emulator candidates under Library/PICO/sdk (first 20) ---"
+          find "$HOME/Library/PICO/sdk" \( -name 'emulator*' \) 2>/dev/null | head -20 || true
           pick_emu() {
             find "$1" -name emulator \( -type f -o -type l \) 2>/dev/null | while read -r c; do
               if [ -x "$c" ]; then echo "$c"; break; fi
@@ -123,20 +140,20 @@ jobs:
             done | head -1
           }
           EMU=""
-          for ROOT in "$HOME/.pico" "${PICO_HOME:-}" "$HOME/.picoxr"; do
+          for ROOT in "$HOME/.pico" "$HOME/Library/PICO/sdk" "${PICO_HOME:-}" "$HOME/.picoxr"; do
             [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
             EMU="$(pick_emu "$ROOT" || true)"
             [ -n "$EMU" ] && break
           done
           if [ -z "$EMU" ]; then
-            for ROOT in "$HOME/.pico" "${PICO_HOME:-}" "$HOME/.picoxr"; do
+            for ROOT in "$HOME/.pico" "$HOME/Library/PICO/sdk" "${PICO_HOME:-}" "$HOME/.picoxr"; do
               [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
               EMU="$(pick_emu_glob "$ROOT" || true)"
               [ -n "$EMU" ] && break
             done
           fi
           if [ -z "$EMU" ]; then
-            echo "EMULATOR BINARY NOT FOUND: searched for executable files named emulator / emulator-* (regular files and symlinks, any depth) under \$HOME/.pico, \$PICO_HOME, \$HOME/.picoxr"
+            echo "EMULATOR BINARY NOT FOUND: searched for executable files named emulator / emulator-* (regular files and symlinks, any depth) under \$HOME/.pico, \$HOME/Library/PICO/sdk, \$PICO_HOME, \$HOME/.picoxr"
             exit 1
           fi
           echo "emu=$EMU" >> "$GITHUB_OUTPUT"
