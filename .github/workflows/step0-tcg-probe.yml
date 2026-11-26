@@ -1,0 +1,170 @@
+# Step 0 TCG probe — PICO emulator under SOFTWARE emulation on a GitHub macOS runner
+#
+# Why this file exists (26 Nov 2026): run #3 proved the standard GitHub
+# macOS runner cannot boot the PICO emulator with hardware acceleration —
+# macOS denies Hypervisor Framework creation inside the runner VM
+# (`failed to initialize HVF: Invalid argument`, `HVF error: HV_UNSUPPORTED`,
+# `hypervisor_runtime_denied`, "Retry same context: no"; emulator died
+# instantly at 10:32:25, NOT a slow boot). `pico-cli emulator start` has NO
+# flag to force software emulation (help verified on CLI 0.7.0), so this
+# probe bypasses the CLI for the start step and invokes the emulator binary
+# directly with `-accel off`, exactly as the stock Android emulator supports.
+#
+# Precedent: agtom-fn/Ollidar hit the identical HV_UNSUPPORTED on
+# macos-latest and booted an arm64-v8a AVD with `-accel off` (TCG software
+# emulation, arm64 guest on arm64 host — slow, but it boots). This probe
+# tests whether PICO's emulator binary (a fork of the same Android
+# emulator: its log lines show qemu-system-aarch64, EmulatorContainer,
+# EmulatorQtWindow) accepts the same flag.
+#
+# Success criterion for THIS probe: `sys.boot_completed` becomes 1.
+# It does NOT need a usable demo frame rate — a 3D spatial app under TCG
+# will be slow. If boot completes, W2–W4 work can proceed on the runner
+# (build + install + Smart View recording will be slow; revisit then).
+# If the binary rejects `-accel off`, the log shows it and the probe fails
+# fast with a clear message — that is also a result.
+#
+# Cost: $0. Standard GitHub-hosted runners are free and unlimited on PUBLIC
+# repositories. Hardening vs run #3: job timeout 120 min (was 360); the
+# Diagnostics step is capped at 10 min and every command is wrapped in
+# `timeout 60` (run #3's 6h waste was a bare `adb devices` hanging forever
+# with no device present); emulator logs are uploaded as artifacts on
+# failure so the next diagnosis does not need a browser read.
+#
+# Trigger: push a change to this file, or workflow_dispatch in the Actions tab.
+name: step0-tcg-probe
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/step0-tcg-probe.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  step0-tcg:
+    runs-on: macos-15
+    timeout-minutes: 120
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # ---- Stage A: CLI install + setup (proven working in run #3) ----
+      - name: Install PICO CLI (latest stable)
+        run: |
+          npm install -g @picoxr/pico-cli
+          pico-cli --version
+
+      - name: pico-cli setup (non-interactive, row region, Cursor only)
+        timeout-minutes: 10
+        run: pico-cli setup --region row --yes --agent-tool cursor
+
+      - name: pico-cli doctor
+        continue-on-error: true
+        run: pico-cli doctor || true
+
+      # ---- Stage B: emulator install / create (proven working in run #3) ----
+      - name: Install PICO emulator bundle
+        timeout-minutes: 60
+        run: pico-cli emulator install -y
+
+      - name: Create AVD
+        timeout-minutes: 30
+        run: pico-cli emulator create --avd SpaceProgram_Smoke -y
+
+      - name: Locate emulator binary and adb (fail fast if missing)
+        id: tools
+        run: |
+          EMU="$(find "$HOME/.pico" -maxdepth 3 -name emulator -type f 2>/dev/null | head -1)"
+          if [ -z "$EMU" ]; then echo "EMULATOR BINARY NOT FOUND under \$HOME/.pico"; exit 1; fi
+          echo "emu=$EMU" >> "$GITHUB_OUTPUT"
+          echo "emulator binary: $EMU"
+          ADB="$(find "$HOME" -maxdepth 6 -path '*platform-tools/adb' -type f 2>/dev/null | head -1 || true)"
+          if [ -z "$ADB" ]; then echo "adb NOT FOUND under \$HOME"; exit 1; fi
+          dirname "$ADB" >> "$GITHUB_PATH"
+          echo "adb: $ADB"
+          "$EMU" -accel-check || true
+
+      # ---- Stage B (probe): start the emulator binary directly, -accel off ----
+      - name: Start emulator with -accel off (TCG) and wait for boot
+        timeout-minutes: 100
+        run: |
+          EMU="${{ steps.tools.outputs.emu }}"
+          echo "starting: $EMU -avd SpaceProgram_Smoke -no-snapshot -no-window -no-audio -accel off -gpu swiftshader_indirect -memory 4096"
+          "$EMU" -avd SpaceProgram_Smoke -no-snapshot -no-window -no-audio -accel off -gpu swiftshader_indirect -memory 4096 > /tmp/emu-tcg.log 2>&1 &
+          echo "emulator launched in background (TCG)"
+          for i in $(seq 1 540); do
+            if timeout 30 adb devices 2>/dev/null | grep -q emulator; then
+              if [ "$(timeout 30 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then
+                echo "BOOT COMPLETE (TCG) after ~$((i * 10))s"
+                timeout 30 adb shell getprop ro.build.version.release || true
+                timeout 30 adb shell pm list packages 2>/dev/null | grep -i pico | head -10 || true
+                exit 0
+              fi
+            fi
+            if [ $((i % 60)) -eq 0 ]; then
+              echo "--- still waiting, ${i}0s elapsed ---"
+              timeout 30 adb devices || true
+              timeout 30 pico-cli emulator status || true
+              tail -5 /tmp/emu-tcg.log || true
+            fi
+            sleep 10
+          done
+          echo "EMULATOR DID NOT BOOT (TCG) within 90 minutes"
+          tail -100 /tmp/emu-tcg.log || true
+          timeout 30 pico-cli emulator status || true
+          exit 1
+
+      # ---- Stage C: WelcomeSpace build + install + launch (only if boot passed) ----
+      - name: Clone WelcomeSpace sample (Apache 2.0)
+        run: git clone --depth 1 https://github.com/Pico-Developer/PICO-Spatial-SDK-Sample-WelcomeSpace.git sample-welcomespace
+
+      - name: Build WelcomeSpace APK
+        timeout-minutes: 60
+        run: |
+          cd sample-welcomespace
+          ./gradlew assembleDebug --stacktrace
+          ls -la app/build/outputs/apk/debug/
+
+      - name: Install and launch on emulator
+        timeout-minutes: 30
+        run: |
+          timeout 120 adb install -r sample-welcomespace/app/build/outputs/apk/debug/app-debug.apk
+          timeout 60 adb shell am start -n com.pico.spatial.sample.welcomespace/.platform.LaunchActivity
+          sleep 60
+          timeout 30 adb shell pidof com.pico.spatial.sample.welcomespace
+          timeout 60 adb exec-out screencap -p > /tmp/welcomespace.png
+          ls -la /tmp/welcomespace.png
+
+      # ---- Diagnostics: always, capped (run #3's 6h waste was an uncapped hang) ----
+      - name: Diagnostics
+        if: always()
+        timeout-minutes: 10
+        run: |
+          timeout 60 pico-cli emulator status || true
+          timeout 60 adb devices || true
+          timeout 60 adb logcat -d -t 300 || true
+          tail -60 /tmp/emu-tcg.log || true
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step0-tcg-evidence
+          path: |
+            /tmp/welcomespace.png
+            /tmp/emu-tcg.log
+          if-no-files-found: warn
