@@ -1,0 +1,318 @@
+# Step 0 Windows probe — PICO emulator with HARDWARE acceleration (WHPX) on a
+# standard GitHub-hosted Windows runner (windows-latest, 4 vCPU / 16 GB, free
+# for public repos).
+#
+# Why this file exists (27 Nov 2026): the macOS routes are dead — standard
+# macOS runners deny Hypervisor.Framework (run #3) and TCG never booted in
+# 90 min (TCG probe run #3, 26 Nov 20:20 GMT). The OVHcloud Windows VM route
+# is blocked on access (no admin password anywhere, VNC host refuses
+# connections from the cloud browser). This probe tests the remaining free
+# route: a standard windows-latest runner.
+#
+# The open question it answers: does the PICO emulator boot on windows-latest
+# with hardware acceleration (WHPX)? The evidence is CONFLICTED, so the probe
+# itself is the discriminator:
+# - GitHub's Feb 2023 changelog announced hardware-accelerated Android
+#   virtualization on LARGER Windows/Linux runners only; WarpBuild's matrix
+#   (checked 2026-08-13) says Cloud Windows has no nested virtualization;
+#   a Jul 2026 QEMU issue states windows-latest "do[es] not support nested
+#   virtualization / Hyper-V"; android-emulator-runner documents Linux and
+#   macOS only, not Windows.
+# - BUT a first-hand Nov 2026 report (agemu project) says the stock Android
+#   emulator "starts under nested WHPX" on hosted windows-latest (2026-11)
+#   and reaches boot completion in ~4 min — then guest system services fail
+#   binder calls (DeadObjectException), so on-device automation fails.
+#   I.e. boot may succeed while the guest is too unstable to use.
+# This workflow therefore treats sys.boot_completed = 1 as the success
+# criterion but ALSO captures the failure signature (accel-check output,
+# emulator log, logcat) so a "booted but broken" outcome is legible, not
+# just a pass/fail.
+#
+# Second open risk: the PICO system-image architecture on Windows. The macOS
+# bundle is aarch64 (qemu-system-aarch64). WHPX accelerates x86_64 guests
+# only; if the Windows bundle ships an arm64 image, WHPX cannot accelerate
+# it and the emulator needs TCG arm64-on-x86_64 (not a viable demo path).
+# The `-accel-check` output and the emulator log in the locate/boot steps
+# reveal the image architecture and the accelerator in use.
+#
+# Unlike the macOS TCG probe, this probe does NOT pass -accel off: it starts
+# the emulator binary directly with `-accel on`, so a missing/unusable WHPX
+# fails fast with a clear error instead of silently falling back to TCG and
+# burning the 30-min wait. `pico-cli emulator start` has no flag passthrough
+# and its blocking/timeout behaviour is unverified, so the direct-binary
+# start (same shape as the TCG probe) is used here too.
+#
+# Cost: $0. Standard GitHub-hosted runners are free and unlimited on PUBLIC
+# repositories. Job timeout 120 min; Diagnostics capped at 10 min with every
+# command timeout-wrapped (the macOS run #3 wasted 6h on a bare `adb
+# devices`); emulator log + screenshot uploaded as artifacts on failure.
+#
+# Trigger: workflow_dispatch only, in the Actions tab. NOTE: Stage C
+# downloads the prebuilt War-Room APK from a link that EXPIRES 28 Nov 2026
+# 23:35 UTC — run this probe before then, or re-host the APK and update
+# the URL below.
+name: step0-windows-probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  step0-windows:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # ---- Stage A: CLI install + setup (PowerShell; the default shell) ----
+      # PICO CLI install source (verified 27 Nov 2026, developer.picoxr.com
+      # "Install and initialize PICO CLI"): npm install -g @picoxr/pico-cli,
+      # Node 20+, then `pico-cli setup`. No installer exe, no zip — npm only.
+      # CLI 0.7.0 verified locally the same day (npm install + --help):
+      # emulator subcommands are install/create/start/list/status/log/doctor/
+      # setup/stop/delete/delete-image/dump-logs.
+      - name: Install PICO CLI (latest stable)
+        run: |
+          npm install -g @picoxr/pico-cli
+          pico-cli --version
+
+      # Cursor-only setup, as on macOS run #3. UNPROVEN on Windows: Cursor is
+      # not installed on the runner, and setup may fail configuring it the
+      # way it failed for claude-code/codex/copilot/traecli on macOS run #2.
+      # continue-on-error because setup is about agent plugins, not the
+      # emulator — the probe's critical path (install/create/start) does not
+      # depend on it.
+      - name: pico-cli setup (non-interactive, row region, Cursor only)
+        timeout-minutes: 10
+        continue-on-error: true
+        run: pico-cli setup --region row --yes --agent-tool cursor
+
+      - name: pico-cli doctor
+        continue-on-error: true
+        run: |
+          pico-cli doctor
+          if ($LASTEXITCODE -ne 0) { echo "doctor reported issues (non-fatal for this probe)" }
+
+      # `pico-cli emulator doctor` includes a Windows virtualization check on
+      # Windows (on Linux it reports "[skip] Windows virtualization: not
+      # applicable") — its output is a first signal for whether WHPX exists.
+      - name: pico-cli emulator doctor and setup check
+        continue-on-error: true
+        run: |
+          pico-cli emulator doctor
+          pico-cli emulator setup
+
+      # ---- Stage B: emulator install / create (PowerShell) ----
+      - name: Install PICO emulator bundle
+        timeout-minutes: 60
+        run: pico-cli emulator install -y
+
+      - name: Create AVD
+        timeout-minutes: 30
+        run: pico-cli emulator create --avd SpaceProgram_Smoke -y
+
+      # ---- Locate emulator binary and adb (fail fast) — Git Bash ----
+      # (shell: bash; Git Bash is preinstalled on windows-latest.)
+      # On macOS the bundle installed to $HOME/Library/PICO/sdk/6.2/emulator
+      # and PICO_HOME was configured but NOT exported into the shell — the
+      # same trap is expected on Windows, so this step searches every
+      # plausible root and exports PICO_HOME (persisted via $GITHUB_ENV).
+      # Candidate Windows roots: $HOME/Library/PICO/sdk (macOS-style),
+      # $HOME/AppData/Local/PICO/sdk, $HOME/AppData/Roaming/PICO/sdk,
+      # $HOME/.pico. The `-accel-check` at the end prints whether WHPX is
+      # available — the probe's key diagnostic.
+      - name: Locate emulator binary and adb (fail fast if missing)
+        id: tools
+        shell: bash
+        run: |
+          echo "HOME=$HOME"
+          echo "USERPROFILE=${USERPROFILE:-<unset>}"
+          echo "PICO_HOME=${PICO_HOME:-<unset>}"
+          echo "ANDROID_HOME=${ANDROID_HOME:-<unset>} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-<unset>}"
+          # Convert any Windows-style (C:\...) paths to Unix form for find.
+          to_unix() { if [ -n "$1" ]; then cygpath -u "$1" 2>/dev/null || echo "$1"; fi; }
+          AH="$(to_unix "${ANDROID_HOME:-}")"
+          ASR="$(to_unix "${ANDROID_SDK_ROOT:-}")"
+          # Export PICO_HOME from the first candidate root that holds an
+          # emulator bundle, and persist it via $GITHUB_ENV so later steps
+          # (boot, diagnostics) see it too.
+          if [ -z "${PICO_HOME:-}" ]; then
+            for CAND in "$HOME/Library/PICO/sdk" "$HOME/AppData/Local/PICO/sdk" "$HOME/AppData/Roaming/PICO/sdk"; do
+              if [ -d "$CAND" ]; then
+                export PICO_HOME="$CAND"
+                echo "PICO_HOME=$PICO_HOME" >> "$GITHUB_ENV"
+                echo "PICO_HOME was unset; exported and persisted: $PICO_HOME"
+                break
+              fi
+            done
+          fi
+          echo "--- candidate trees (first 40 lines each) ---"
+          for ROOT in "$HOME/.pico" "$HOME/Library/PICO/sdk" "$HOME/AppData/Local/PICO/sdk" "${PICO_HOME:-}"; do
+            [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+            echo "--- tree: $ROOT ---"
+            find "$ROOT" 2>/dev/null | head -40 || true
+          done
+          echo "--- what the CLI sees ---"
+          pico-cli emulator list || true
+          pico-cli emulator status || true
+          echo "--- emulator candidates (first 20) ---"
+          for ROOT in "$HOME/.pico" "$HOME/Library/PICO/sdk" "$HOME/AppData/Local/PICO/sdk" "$HOME/AppData/Roaming/PICO/sdk" "${PICO_HOME:-}"; do
+            [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+            find "$ROOT" \( -name 'emulator*.exe' -o -name 'qemu-system-*.exe' \) 2>/dev/null | head -20 || true
+          done
+          pick_emu() {
+            find "$1" -name 'emulator.exe' \( -type f -o -type l \) 2>/dev/null | while read -r c; do
+              if [ -x "$c" ]; then echo "$c"; break; fi
+            done | head -1
+          }
+          pick_emu_glob() {
+            find "$1" \( -name 'emulator-*.exe' -o -name 'qemu-system-*.exe' \) \( -type f -o -type l \) 2>/dev/null | while read -r c; do
+              case "$c" in *.json|*.log) continue;; esac
+              if [ -x "$c" ]; then echo "$c"; break; fi
+            done | head -1
+          }
+          EMU=""
+          for ROOT in "$HOME/.pico" "$HOME/Library/PICO/sdk" "$HOME/AppData/Local/PICO/sdk" "$HOME/AppData/Roaming/PICO/sdk" "${PICO_HOME:-}"; do
+            [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+            EMU="$(pick_emu "$ROOT" || true)"
+            [ -n "$EMU" ] && break
+          done
+          if [ -z "$EMU" ]; then
+            for ROOT in "$HOME/.pico" "$HOME/Library/PICO/sdk" "$HOME/AppData/Local/PICO/sdk" "$HOME/AppData/Roaming/PICO/sdk" "${PICO_HOME:-}"; do
+              [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+              EMU="$(pick_emu_glob "$ROOT" || true)"
+              [ -n "$EMU" ] && break
+            done
+          fi
+          if [ -z "$EMU" ]; then
+            echo "EMULATOR BINARY NOT FOUND: searched for emulator.exe / emulator-*.exe / qemu-system-*.exe under \$HOME/.pico, \$HOME/Library/PICO/sdk, \$HOME/AppData/Local/PICO/sdk, \$HOME/AppData/Roaming/PICO/sdk, \$PICO_HOME"
+            exit 1
+          fi
+          echo "emu=$EMU" >> "$GITHUB_OUTPUT"
+          echo "emulator binary: $EMU"
+          ls -la "$EMU" || true
+          echo "--- searching for adb ---"
+          ADB=""
+          if command -v adb >/dev/null 2>&1; then ADB="$(command -v adb)"; echo "adb on PATH: $ADB"; fi
+          if [ -z "$ADB" ]; then
+            for ROOT in "$AH" "$ASR" /c/Android/android-sdk "$HOME/AppData/Local/Android/Sdk" "$HOME/.pico" "${PICO_HOME:-}"; do
+              [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+              ADB="$(find "$ROOT" -path '*platform-tools/adb.exe' \( -type f -o -type l \) 2>/dev/null | head -1 || true)"
+              [ -n "$ADB" ] && break
+            done
+          fi
+          if [ -z "$ADB" ]; then
+            echo "adb NOT FOUND: checked PATH, \$ANDROID_HOME, \$ANDROID_SDK_ROOT, /c/Android/android-sdk, \$HOME/AppData/Local/Android/Sdk, \$HOME/.pico, \$PICO_HOME"
+            exit 1
+          fi
+          dirname "$ADB" >> "$GITHUB_PATH"
+          echo "adb: $ADB"
+          # Key diagnostic: prints whether WHPX (or another accelerator) is
+          # available on this runner. Runs BEFORE the boot step so a missing
+          # WHPX is visible even if -accel on then fails fast.
+          "$EMU" -accel-check || true
+
+      # ---- Stage B (probe): start the emulator binary directly, WHPX enforced ----
+      # (shell: bash.) -accel on FAILS FAST if WHPX is unavailable, instead of
+      # silently falling back to TCG and burning the 30-min wait. -gpu
+      # swiftshader_indirect: the runner has no GPU (PICO's FAQ wants 8 GB
+      # GPU memory); software rendering is slow but sufficient for a boot +
+      # screenshot probe. Log goes to the workspace so the artifact step can
+      # pick it up with a relative path.
+      - name: Start emulator with WHPX and wait for boot
+        timeout-minutes: 45
+        shell: bash
+        run: |
+          EMU="${{ steps.tools.outputs.emu }}"
+          LOG="$(pwd)/emu-win.log"
+          # Guard: `timeout` is coreutils, shipped with Git Bash — but if it
+          # is ever absent, fall back to running the command directly rather
+          # than failing every adb call.
+          TO() { if command -v timeout >/dev/null 2>&1; then timeout 30 "$@"; else "$@"; fi; }
+          echo "starting: $EMU -avd SpaceProgram_Smoke -no-snapshot -no-window -no-audio -accel on -gpu swiftshader_indirect -memory 4096"
+          "$EMU" -avd SpaceProgram_Smoke -no-snapshot -no-window -no-audio -accel on -gpu swiftshader_indirect -memory 4096 > "$LOG" 2>&1 &
+          echo "emulator launched in background (WHPX enforced via -accel on)"
+          for i in $(seq 1 180); do
+            if TO adb devices 2>/dev/null | grep -q emulator; then
+              if [ "$(TO adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then
+                echo "BOOT COMPLETE (WHPX) after ~$((i * 10))s"
+                TO adb shell getprop ro.build.version.release || true
+                TO adb shell pm list packages 2>/dev/null | grep -i pico | head -10 || true
+                exit 0
+              fi
+            fi
+            if [ $((i % 60)) -eq 0 ]; then
+              echo "--- still waiting, ${i}0s elapsed ---"
+              TO adb devices || true
+              pico-cli emulator status || true
+              tail -5 "$LOG" || true
+            fi
+            sleep 10
+          done
+          echo "EMULATOR DID NOT BOOT (WHPX) within 30 minutes"
+          tail -100 "$LOG" || true
+          pico-cli emulator status || true
+          exit 1
+
+      # ---- Stage C: War-Room APK download + install + launch (only if boot passed) ----
+      # (shell: bash.) The APK is the verified W4 build (55/55 tests, clean
+      # copy). NOTE: this download link EXPIRES 28 Nov 2026 23:35 UTC — if
+      # the probe runs after that, re-host the APK and update this URL.
+      - name: Download War-Room APK (prebuilt W4)
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          curl -L -o war-room.apk "https://muse.ai/files/1454266777763756/1167376662419153/bjhksxk50xuytzb6q90sbm1s/app-debug.apk"
+          ls -la war-room.apk
+          SIZE="$(wc -c < war-room.apk | tr -d ' ')"
+          echo "size: $SIZE bytes (expected 11399639)"
+          [ "$SIZE" = "11399639" ] || { echo "SIZE MISMATCH: expected 11399639, got $SIZE"; exit 1; }
+          echo "f1ac339fb812d42feffa3249d2c702d0  war-room.apk" | md5sum -c -
+
+      - name: Install and launch War-Room on emulator
+        shell: bash
+        timeout-minutes: 30
+        run: |
+          TO() { if command -v timeout >/dev/null 2>&1; then timeout 120 "$@"; else "$@"; fi; }
+          TO adb install -r war-room.apk
+          TO adb shell am start -n com.pico.warroom/.MainActivity
+          sleep 60
+          TO adb shell pidof com.pico.warroom
+          TO adb exec-out screencap -p > war-room.png
+          ls -la war-room.png
+
+      # ---- Diagnostics: always, capped (macOS run #3's 6h waste was an uncapped hang) ----
+      - name: Diagnostics
+        if: always()
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          TO60() { if command -v timeout >/dev/null 2>&1; then timeout 60 "$@"; else "$@"; fi; }
+          TO60 pico-cli emulator status || true
+          TO60 adb devices || true
+          TO60 adb logcat -d -t 300 || true
+          tail -60 "$(pwd)/emu-win.log" || true
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step0-windows-evidence
+          path: |
+            war-room.png
+            emu-win.log
+          if-no-files-found: warn
