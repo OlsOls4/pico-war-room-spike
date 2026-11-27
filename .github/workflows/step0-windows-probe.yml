@@ -51,6 +51,16 @@
 # downloads the prebuilt War-Room APK from a link that EXPIRES 28 Nov 2026
 # 23:35 UTC — run this probe before then, or re-host the APK and update
 # the URL below.
+#
+# v2 (27 Nov 2026): run #1 (45916355182) timed out at step 12 — WHPX was
+# installed and usable, no device ever appeared in adb, sys.boot_completed
+# never reached 1, and the emulator log was EMPTY at every checkpoint. The
+# only concrete error was doctor steps 7-8: "Platform 35 or Sources for
+# Android 35 is missing". v2 installs platforms;android-35 +
+# sources;android-35 via sdkmanager BEFORE the doctor steps, makes the
+# doctor steps FAIL the job if they still fail (no silent continuation past
+# a broken SDK state), and captures the emulator log via -logfile (absolute
+# Windows-form path) plus a separate stdout/stderr redirect, tailing both.
 name: step0-windows-probe
 
 on:
@@ -101,20 +111,90 @@ jobs:
         continue-on-error: true
         run: pico-cli setup --region row --yes --agent-tool cursor
 
+      # ---- NEW in v2: install Android SDK Platform 35 (+ sources) ----
+      # Run #1's only concrete error was doctor steps 7-8: "Android SDK is
+      # installed, but Platform 35 or Sources for Android 35 is missing."
+      # windows-latest pre-installs an Android SDK at C:\Android\android-sdk
+      # (ANDROID_HOME) with cmdline-tools, but the image's platform set is
+      # what the doctor checks — so install both packages explicitly via
+      # its sdkmanager BEFORE the doctor steps run. This step FAILS the job
+      # if either package is not installed afterwards (directory check).
+      # sdkmanager path (runner-images Windows image): $ANDROID_HOME\
+      # cmdline-tools\latest\bin\sdkmanager.bat, falling back to any
+      # versioned cmdline-tools\<version>\bin\sdkmanager.bat. If
+      # cmdline-tools is absent entirely, install it first from Google's
+      # official command-line-tools zip (build 13114758 — the same build
+      # verified for the Linux SDK in this project).
+      - name: Install Android SDK Platform 35 (and sources)
+        timeout-minutes: 30
+        run: |
+          $SDK = $env:ANDROID_HOME
+          if (-not $SDK) { $SDK = $env:ANDROID_SDK_ROOT }
+          if (-not $SDK) { $SDK = 'C:\Android\android-sdk' }
+          echo "Android SDK root: $SDK"
+          if (-not (Test-Path $SDK)) { echo "ANDROID SDK NOT FOUND at $SDK"; exit 1 }
+          if (-not $env:ANDROID_HOME) {
+            "ANDROID_HOME=$SDK" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            echo "ANDROID_HOME was unset; persisted $SDK via GITHUB_ENV"
+          }
+          $SDKMANAGER = $null
+          $candidates = @("$SDK\cmdline-tools\latest\bin\sdkmanager.bat")
+          $candidates += Get-ChildItem -Path "$SDK\cmdline-tools" -Directory -ErrorAction SilentlyContinue | ForEach-Object { "$($_.FullName)\bin\sdkmanager.bat" }
+          foreach ($c in $candidates) { if ($c -and (Test-Path $c)) { $SDKMANAGER = $c; break } }
+          if (-not $SDKMANAGER) {
+            echo "cmdline-tools NOT found under $SDK — installing it from Google's official zip"
+            $zip = "$env:TEMP\cmdline-tools-win.zip"
+            Invoke-WebRequest -Uri "https://dl.google.com/android/repository/commandlinetools-win-13114758_latest.zip" -OutFile $zip
+            $tmp = "$env:TEMP\cmdline-tools-extract"
+            if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
+            Expand-Archive -Path $zip -DestinationPath $tmp -Force
+            New-Item -ItemType Directory -Force -Path "$SDK\cmdline-tools\latest" | Out-Null
+            Copy-Item "$tmp\cmdline-tools\*" "$SDK\cmdline-tools\latest\" -Recurse -Force
+            $SDKMANAGER = "$SDK\cmdline-tools\latest\bin\sdkmanager.bat"
+            if (-not (Test-Path $SDKMANAGER)) { echo "cmdline-tools install FAILED (no sdkmanager.bat after extract)"; exit 1 }
+            echo "cmdline-tools installed: $SDKMANAGER"
+          }
+          echo "sdkmanager: $SDKMANAGER"
+          & $SDKMANAGER --version --sdk_root="$SDK"
+          if ($LASTEXITCODE -ne 0) { echo "sdkmanager --version FAILED (exit $LASTEXITCODE) — sdkmanager cannot run"; exit 1 }
+          # Accept licences non-interactively (50 y's covers every prompt),
+          # then install both packages the doctor checks for.
+          1..50 | ForEach-Object { 'y' } | & $SDKMANAGER --sdk_root="$SDK" --licenses
+          if ($LASTEXITCODE -ne 0) { echo "sdkmanager --licenses FAILED (exit $LASTEXITCODE)"; exit 1 }
+          1..50 | ForEach-Object { 'y' } | & $SDKMANAGER --sdk_root="$SDK" "platforms;android-35" "sources;android-35"
+          if ($LASTEXITCODE -ne 0) { echo "sdkmanager install FAILED (exit $LASTEXITCODE)"; exit 1 }
+          # Verify with a directory/file check — the job FAILS if either
+          # package is not actually on disk afterwards.
+          $platformOk = Test-Path "$SDK\platforms\android-35\android.jar"
+          $sourcesOk = Test-Path "$SDK\sources\android-35"
+          echo "platforms/android-35/android.jar present: $platformOk"
+          echo "sources/android-35 present: $sourcesOk"
+          if (-not $platformOk) { echo "FAIL: platforms;android-35 not installed (no $SDK\platforms\android-35\android.jar)"; exit 1 }
+          if (-not $sourcesOk) { echo "FAIL: sources;android-35 not installed (no $SDK\sources\android-35)"; exit 1 }
+          & $SDKMANAGER --sdk_root="$SDK" --list_installed | Select-String -Pattern "android-35" | ForEach-Object { echo $_.Line }
+          echo "Android SDK Platform 35 (+ sources) installed and verified"
+
+      # v2: this step FAILS the job if pico-cli doctor fails. In run #1 it
+      # exited 1 (Platform 35 missing) and the workflow burned 30 minutes
+      # anyway — no silent continuation past a broken SDK state.
       - name: pico-cli doctor
-        continue-on-error: true
         run: |
           pico-cli doctor
-          if ($LASTEXITCODE -ne 0) { echo "doctor reported issues (non-fatal for this probe)" }
+          if ($LASTEXITCODE -ne 0) { echo "pico-cli doctor FAILED (exit $LASTEXITCODE) — failing fast, SDK state is broken"; exit 1 }
 
       # `pico-cli emulator doctor` includes a Windows virtualization check on
       # Windows (on Linux it reports "[skip] Windows virtualization: not
       # applicable") — its output is a first signal for whether WHPX exists.
+      # v2: this step FAILS the job if doctor or setup fails (run #1: it
+      # exited 1 on the missing Platform 35 and the workflow continued into
+      # a 30-min boot wait anyway). Setup rides in the same step because it
+      # is part of establishing the emulator's SDK state.
       - name: pico-cli emulator doctor and setup check
-        continue-on-error: true
         run: |
           pico-cli emulator doctor
+          if ($LASTEXITCODE -ne 0) { echo "pico-cli emulator doctor FAILED (exit $LASTEXITCODE) — failing fast, SDK state is broken"; exit 1 }
           pico-cli emulator setup
+          if ($LASTEXITCODE -ne 0) { echo "pico-cli emulator setup FAILED (exit $LASTEXITCODE) — failing fast"; exit 1 }
 
       # ---- Stage B: emulator install / create (PowerShell) ----
       - name: Install PICO emulator bundle
@@ -231,20 +311,35 @@ jobs:
       # silently falling back to TCG and burning the 30-min wait. -gpu
       # swiftshader_indirect: the runner has no GPU (PICO's FAQ wants 8 GB
       # GPU memory); software rendering is slow but sufficient for a boot +
-      # screenshot probe. Log goes to the workspace so the artifact step can
-      # pick it up with a relative path.
+      # screenshot probe. v2 log capture: the emulator's own -logfile
+      # (ABSOLUTE Windows-form path) AND the process stdout/stderr redirect
+      # are SEPARATE files — in run #1 the single redirected log was EMPTY at
+      # every checkpoint, so on Windows the emulator evidently writes nothing
+      # to stdout/stderr and -logfile is the only channel that can carry its
+      # own log. Both files are tailed at every checkpoint and in Diagnostics
+      # and uploaded as artifacts; if both stay empty the workflow says so
+      # explicitly instead of printing a silent blank tail.
       - name: Start emulator with WHPX and wait for boot
         timeout-minutes: 45
         shell: bash
         run: |
           EMU="${{ steps.tools.outputs.emu }}"
-          LOG="$(pwd)/emu-win.log"
+          WORKSPACE="$(pwd)"
+          LOG="$WORKSPACE/emu-win.log"
+          LOG_WIN="$(cygpath -w "$LOG")"
+          OUTLOG="$WORKSPACE/emu-win-stdout.log"
+          tail_both() {
+            for F in "$LOG" "$OUTLOG"; do
+              if [ -s "$F" ]; then echo "--- tail -$1 $F ---"; tail -"$1" "$F" || true;
+              else echo "--- $F is EMPTY or MISSING (no emulator log output there) ---"; fi
+            done
+          }
           # Guard: `timeout` is coreutils, shipped with Git Bash — but if it
           # is ever absent, fall back to running the command directly rather
           # than failing every adb call.
           TO() { if command -v timeout >/dev/null 2>&1; then timeout 30 "$@"; else "$@"; fi; }
-          echo "starting: $EMU -avd SpaceProgram_Smoke -no-snapshot -no-window -no-audio -accel on -gpu swiftshader_indirect -memory 4096"
-          "$EMU" -avd SpaceProgram_Smoke -no-snapshot -no-window -no-audio -accel on -gpu swiftshader_indirect -memory 4096 > "$LOG" 2>&1 &
+          echo "starting: $EMU -avd SpaceProgram_Smoke -no-snapshot -no-window -no-audio -accel on -gpu swiftshader_indirect -memory 4096 -logfile $LOG_WIN"
+          "$EMU" -avd SpaceProgram_Smoke -no-snapshot -no-window -no-audio -accel on -gpu swiftshader_indirect -memory 4096 -logfile "$LOG_WIN" > "$OUTLOG" 2>&1 &
           echo "emulator launched in background (WHPX enforced via -accel on)"
           for i in $(seq 1 180); do
             if TO adb devices 2>/dev/null | grep -q emulator; then
@@ -259,12 +354,12 @@ jobs:
               echo "--- still waiting, ${i}0s elapsed ---"
               TO adb devices || true
               pico-cli emulator status || true
-              tail -5 "$LOG" || true
+              tail_both 5
             fi
             sleep 10
           done
           echo "EMULATOR DID NOT BOOT (WHPX) within 30 minutes"
-          tail -100 "$LOG" || true
+          tail_both 100
           pico-cli emulator status || true
           exit 1
 
@@ -305,7 +400,18 @@ jobs:
           TO60 pico-cli emulator status || true
           TO60 adb devices || true
           TO60 adb logcat -d -t 300 || true
-          tail -60 "$(pwd)/emu-win.log" || true
+          for F in "$(pwd)/emu-win.log" "$(pwd)/emu-win-stdout.log"; do
+            if [ -s "$F" ]; then echo "--- tail -60 $F ---"; tail -60 "$F" || true;
+            else echo "--- $F is EMPTY or MISSING (the emulator wrote no log output there) ---"; fi
+          done
+          echo "--- other emulator/avd logs under HOME (bounded, first 3 files) ---"
+          FOUND="$(TO60 find "$HOME/.android" "$HOME/.pico" -maxdepth 4 -name '*.log' 2>/dev/null | head -3 || true)"
+          if [ -n "$FOUND" ]; then
+            echo "$FOUND"
+            echo "$FOUND" | while read -r LF; do echo "--- tail -20 $LF ---"; tail -20 "$LF" || true; done
+          else
+            echo "no other emulator/avd *.log files found under \$HOME/.android or \$HOME/.pico"
+          fi
 
       - name: Upload evidence
         if: always()
@@ -315,4 +421,5 @@ jobs:
           path: |
             war-room.png
             emu-win.log
+            emu-win-stdout.log
           if-no-files-found: warn
